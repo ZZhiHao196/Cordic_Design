@@ -1,0 +1,122 @@
+`timescale 1ns/1ps
+//`include "Cordic.v"
+
+
+module Cordic_Test;
+    reg [16:0] theta;
+    wire [16:0] sin_out;
+    wire [16:0] cos_out;
+    
+    integer f_sin, f_cos, f_in;
+    integer scan_status;
+    
+    initial begin
+      
+        f_in = $fopen("../Dataset/Model_Data/Model_Theta_S0I1F16.dat", "r");
+        if (f_in == 0) begin
+            $display("Error: Input file not found!");
+            $finish;
+        end
+
+        f_sin = $fopen("../Dataset/RTL_Data/RTL_Sin_Out_S0I1F16.dat", "w");
+        f_cos = $fopen("../Dataset/RTL_Data/RTL_Cos_Out_S0I1F16.dat", "w");
+        
+        begin : main_loop
+            while (!$feof(f_in)) begin  
+                scan_status = $fscanf(f_in, "%h", theta);          
+                if (scan_status != 1) begin 
+                    //$display("[ERROR] Format error at offset 0x%h", $ftell(f_in));
+                    $finish;
+                end
+                
+             
+                #10;  
+                
+        
+                $fdisplay(f_sin, "%05h", sin_out);
+                $fdisplay(f_cos, "%05h", cos_out);
+            end
+            $display("[INFO] End of input file reached");
+        end
+        
+        $fclose(f_in);
+        $fclose(f_sin);
+        $fclose(f_cos);
+        $finish;
+    end
+    
+    Cordic dut (
+        .theta(theta),
+        .sin_out(sin_out),
+        .cos_out(cos_out)
+    );
+    
+endmodule
+
+/*
+module Cordic(
+    input wire [16:0] theta,   // 0~pi/2,  Q1.16
+    output wire [16:0] sin_out, //Q1.16
+    output wire [16:0] cos_out
+);
+
+
+localparam signed [16:0] K =17'sh09B75;  // 1/1.64676 17'h1A592;         
+
+//Q1.16
+reg signed [16:0] angles [0:16];    //arctan(2^-i)
+integer iter;
+initial begin
+    angles[0]  = 17'h0C910;
+    angles[1]  = 17'h076B2;
+    angles[2]  = 17'h03EB7;
+    angles[3]  = 17'h01FD6;// i=0~3
+    angles[4]  = 17'h00FFB;
+    angles[5]  = 17'h007FF;
+    angles[6]  = 17'h00400;
+    angles[7]  = 17'h00200;// i=4~7
+    angles[8]  = 17'h00100;
+    angles[9]  = 17'h00080;
+    angles[10] = 17'h00040;
+    angles[11] = 17'h00020;// i=8~11
+    angles[12] = 17'h00010;
+    angles[13] = 17'h00008;
+    angles[14] = 17'h00004;
+    angles[15] = 17'h00002;// i=12~15
+    angles[16] = 17'h00001;
+end
+
+reg signed [32:0]x,y; 
+reg signed [32:0]x_next,y_next;
+reg signed [17:0] angle;
+integer i;
+
+always@(*)begin
+ 
+    x={K,16'b0};
+    y=33'h0;
+    angle={1'b0,theta};
+   
+    for(i=0;i<16;i=i+1)begin
+        if(!angle[17])begin  
+        
+            x_next=x-(y>>>i); 
+            y_next=y+(x>>>i);
+            angle=angle-{1'b0,angles[i]};
+        end else begin
+          
+            x_next=x+(y>>>i);
+            y_next=y-(x>>>i);
+            angle=angle+{1'b0,angles[i]};
+        end
+        x=x_next;
+        y=y_next;
+    end
+end
+
+assign sin_out = y[32:16];
+assign cos_out = x[32:16];
+
+endmodule
+
+*/

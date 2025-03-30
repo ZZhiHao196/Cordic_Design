@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Cordic Test",
+      "type": "shell",
+      "command": "iverilog",
+      "args": [
+        "-o", "${workspaceFolder}/rtl_model/simv",
+        "${workspaceFolder}/rtl_model/Cordic.v",
+        "${workspaceFolder}/rtl_model/Cordic_Test.v"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/rtl_model"  
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Simulate",
+      "type": "shell",
+      "command": "vvp",
+      "args": ["simv"],
+      "dependsOn": ["Run Cordic Test"],
+      "options": {
+        "cwd": "${workspaceFolder}/rtl_model"
+      }
+    },
+
+    {
+      "label": "Verify Data",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/Dataset/check_data.py",
+        "${workspaceFolder}/Dataset/Model_Data",
+        "${workspaceFolder}/Dataset/RTL_Data"
+      ]
+    }
+  ]
+}
